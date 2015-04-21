@@ -77,13 +77,14 @@ def write_video2(stream):
     stream.truncate()
 
 
-stream = picamera.PiCameraCircularIO(camera, seconds=5)
-camera.annotate_text = 'Waiting'
+stream = picamera.PiCameraCircularIO(camera, seconds=20)
 camera.start_recording(stream, format='h264')
 print ("Recording started")
 camera.wait_recording(1)
 
 c = ''
+stopped = False
+timing = False
 
 print("Starting loop. Press t to terminate, i to start, o to stop.")
 
@@ -91,33 +92,44 @@ while c != 't':
 
     c = read_single_keypress()
 
+
+    Denne fortsetter bare når det trykkes tast. Må skrive om.
+
     if GPIO.input(startButton) == False or c == 'i' :
     	if not timing:
     	    startTime = time.time()
     	    timing = True
+            stopped = False
             print("Start: " + str(startTime))
             camera.annotate_text = 'Timer started'
-            write_video2(stream)
-            print("Splitting video")
-            camera.split_recording('after.h264')
+            #write_video2(stream)
+            #print("Splitting video")
+            #camera.split_recording('after.h264')
 
             videoCounter += 1
 
     if timing:
-        pass
+        print('Posisjon: ' + str(stream.tell()))
         #camera.annotate_text = str(startTime - time.time())
 
     if GPIO.input(stopButton) == False or c == 'o':
-    	if timing:
+    	if timing and not stopped:
     	    stopTime = time.time()
-    	    timing = False
+    	    #timing = False
     	    runTime = stopTime - startTime
     	    print("Stop:  " + str(stopTime))
     	    print("Run time: " + str(runTime))
             camera.annotate_text = 'Timer stopped'
-            camera.wait_recording(5)
+            #camera.wait_recording(5)
+            #camera.stop_recording()
+            print("Stopped recording in 5 sek")
+            stopped = True
+
+    if timing and stopped:
+        if time.time() - stopTime > 5:
             camera.stop_recording()
-            print("Stopped recording")
+            write_video1(stream)
+            timing = False
 
     GPIO.output(greenLed, GPIO.input(startButton))
     GPIO.output(redLed, GPIO.input(stopButton))
