@@ -1,11 +1,11 @@
-from bottle import route, run
+from bottle import route, run, static_file
 import time, picamera, io
 
-camera = picamera.PiCamera()
+camera = picamera.PiCamera(framerate = 25)
 #camera.brightness = 60
 camera.hflip = True
 camera.vflip = True
-stream = picamera.PiCameraCircularIO(camera, seconds=20)
+stream = picamera.PiCameraCircularIO(camera, seconds=5)
 camera.start_recording(stream, format='h264')
 print ("Camera started, recording to buffer")
 camera.wait_recording(1)
@@ -14,19 +14,36 @@ timing = False
 startTime = time.time()
 stopTime = startTime
 runTime = startTime
-videoCounter = 1
+videoCounter = 0
+filename = "video-0.h264"
 print ("Ready (time:" + str(startTime) + ")!")
+
+def write_buf_to_file(stream, filename):
+    with stream.lock:
+	    # Find the first header frame in the video
+	    for frame in stream.frames:
+	        if frame.frame_type == picamera.PiVideoFrameType.sps_header:
+	            stream.seek(frame.position)
+	            break
+	    # Write the rest of the stream to disk
+	    with io.open(filename, 'wb') as output:
+	        output.write(stream.read())
+		return output
+	
 
 @route('/start')
 def start():
-	global camera, stream, stopped, timing, startTime
+	global camera, stream, stopped, timing, startTime, videoCounter, filename
 	res = "Already started. Cannot start again until stopped."
 	if not timing:
 		startTime = time.time()
 		timing = True
 		stopped = False
+		videoCounter += 1
+		filename = "video-" + str(videoCounter) + ".h264"
 		print("Start: " + str(startTime))
 		camera.annotate_text = 'Timer started'
+		camera.split_recording(write_buf_to_file(stream, filename))
 		res = "Started at " + str(startTime)
 	return res
 
@@ -44,8 +61,12 @@ def stop():
 		print("Camera running 5 more seconds")
 		camera.wait_recording(5)
 		camera.stop_recording()
-		videoCounter += 1
 		res = "Stopped at " + str(stopTime) + ", run time " + str(runTime)
 	return res
+
+@route('/view')
+def view():
+	global filename
+	return(static_file(filename, root = "/home/pi/fart"))
 
 run(host='0.0.0.0', port=8080, debug=True)
