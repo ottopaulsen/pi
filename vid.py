@@ -19,6 +19,7 @@ print ("Ready (time:" + str(startTime) + ")!")
 
 @route('/start')
 def start():
+	global camera, stream, stopped, timing, startTime
 	res = "Already started. Cannot start again until stopped."
 	if not timing:
 		startTime = time.time()
@@ -31,6 +32,7 @@ def start():
 
 @route('/stop')
 def stop():
+	global camera, stream, stopped, timing, stopTime, runTime, videoCounter
 	res = "Not started. Cannot stop."
 	if timing and not stopped:
 		stopTime = time.time()
@@ -43,7 +45,7 @@ def stop():
 		camera.wait_recording(5)
 		camera.stop_recording()
 		videoCounter += 1
-		res = "Stopped at " + str(stopTime)
+		res = "Stopped at " + str(stopTime) + ", run time " + str(runTime)
 	return res
 
 run(host='0.0.0.0', port=8080, debug=True)
