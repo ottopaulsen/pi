@@ -1,0 +1,4 @@
+Lagre film uten at noe forsvinner. 
+Start fra sensor via REST
+Vis timer i video
+View video
