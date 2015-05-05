@@ -1,4 +1,4 @@
-from bottle import route, run, static_file, template, request
+from bottle import Bottle, run, static_file, template, request, sys
 from oputils import stringToInt
 import time, picamera, io
 import os.path
@@ -17,6 +17,8 @@ camera.hflip = True
 camera.vflip = True
 stream = picamera.PiCameraCircularIO(camera, seconds=120)
 videoCounter = 0
+
+app = Bottle()
 
 
 # Return filename for the next video to be recorded
@@ -81,7 +83,7 @@ def saveVideo(stream, start, stop) :
                 output.write(stream.read(bytesToSave))
 
 
-@route('/start')
+@app.route('/start')
 def start():
     global status, videoStartFrame, stream
     res = "Busy. Cannot start."
@@ -93,7 +95,7 @@ def start():
     print(res)
     return res
 
-@route('/stop')
+@app.route('/stop')
 def stop():
     global camera, stream, output, status, videoStartFrame
     res = "Not started. Cannot stop."
@@ -111,7 +113,7 @@ def stop():
     print(res)
     return res
 
-@route('/view')
+@app.route('/view')
 def view():
     filename = request.query.filename
     print("View video file: " + filename)
@@ -137,18 +139,18 @@ def view():
 
     return(res)
 
-@route('/files/<filename>')
+@app.route('/files/<filename>')
 def send_file(filename) :
     print("Serving file: " + filename)
     return static_file(filename, root='/home/pi/fart', mimetype='video.mp4')
 
 
-@route('/terminate')
+@app.route('/terminate')
 def terminate() :
     print("Terminating!")
-    shutdown()
+    sys.stderr.close()
 
-@route('/preview/<function>')
+@app.route('/preview/<function>')
 def preview(function):
     if function.lower() == 'on':
         camera.start_preview()
@@ -158,4 +160,4 @@ def preview(function):
         return "Preview stopped"
 
 reset(stream)
-run(host='0.0.0.0', port=8080, debug=True)
+run(app, host='0.0.0.0', port=8080, debug=True)
