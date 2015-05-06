@@ -1,4 +1,4 @@
 
-Start fra sensor 
-Vis timer i video
-View video
+Start fra sensor - Må testes.
+Vis timer i video - Må testes.
+View video - Plages.

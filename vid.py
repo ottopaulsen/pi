@@ -13,6 +13,7 @@ status = STATUS_STARTING
 VIDEOFORMAT = "h264"
 FRAMERATE = 25
 camera = picamera.PiCamera(framerate = FRAMERATE)
+camera.resolution = (640, 480)
 camera.hflip = True
 camera.vflip = True
 stream = picamera.PiCameraCircularIO(camera, seconds=120)
@@ -22,7 +23,7 @@ app = Bottle()
 
 
 # Return filename for the next video to be recorded
-def getFilename(fileEnding = VIDEOFORMAT):
+def getFilename(fileEnding = 'mp4'):
     global videoCounter
     fileName =  "video-" + str(videoCounter) + "." + fileEnding
     while os.path.exists(fileName) :
@@ -85,33 +86,50 @@ def saveVideo(stream, start, stop) :
 
 @app.route('/start')
 def start():
-    global status, videoStartFrame, stream
+    global status, videoStartFrame, stream, startTime, camera
     res = "Busy. Cannot start."
     if status == STATUS_WAITING :
         status = STATUS_STARTED
         offset = stringToInt(request.query.offset, 0)
+        startTime = stringToInt(request.query.time, 0)
         videoStartFrame = getCurrentFrameIndex(stream) + offset * FRAMERATE
         res = "Video start frame: " + str(videoStartFrame)
+        camera.annotate_text = "Time: " + str(startTime)
     print(res)
     return res
 
 @app.route('/stop')
 def stop():
-    global camera, stream, output, status, videoStartFrame
+    global camera, stream, output, status, videoStartFrame, startTime
     res = "Not started. Cannot stop."
     if status == STATUS_STARTED :
         status = STATUS_STOPPING
         offset = stringToInt(request.query.offset, 0)
+        stopTime = stringToInt(request.query.time, 0)
         videoStopFrame = getCurrentFrameIndex(stream) + offset * FRAMERATE
         videoLength = videoStopFrame - videoStartFrame
+        if stopTime > 0 :
+            runTime = stopTime - startTime
+            camera.annotate_text = "Time: " + str(runTime)
+            print("Run time: " + str(runTime))
         if offset > 0 :
-            print("Camera running " + str(offset) + " more seconds")
+            print("Camera running " + str(offset) + " more seconds")               
             camera.wait_recording(offset)
         res = "Video stop frame: " + str(videoStopFrame)
         saveVideo(stream, videoStartFrame, videoStopFrame)
+        camera.annotate_text = "Waiting"
         status = STATUS_WAITING
     print(res)
     return res
+
+@app.route('/annotate')
+def annotate():
+    global camera
+    if request.query.time is not None :
+        camera.annotate_text = "Time: " + request.query.time
+    else :
+        camera.annotate_text = request.query.annotate
+    return camera.annotate_text
 
 @app.route('/view')
 def view():
@@ -126,9 +144,8 @@ def view():
             </head>
 
             <body>
-                <video width="960" height="540" autoplay>
-                    #<source src="http://10.0.0.14:8080/files/''' + filename + '''" type="video/mp4">
-                    <source src="http://10.0.0.14:8080/home/pi/fart/''' + filename + '''" type="video/mp4">
+                <video width="640" height="480" autoplay preload="auto" controls>
+                    <source src="http://10.0.0.14:8081/''' + filename + '''" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             </body>
@@ -137,12 +154,15 @@ def view():
 
     '''
 
+#                <video width="960" height="540" autoplay preload="auto" src="http://10.0.0.14:8080/home/pi/fart/''' + filename + '''">
+
+
     return(res)
 
 @app.route('/files/<filename>')
 def send_file(filename) :
     print("Serving file: " + filename)
-    return static_file(filename, root='/home/pi/fart', mimetype='video.mp4')
+    return static_file(filename, root='/home/pi/fart', mimetype='video/mp4')
 
 
 @app.route('/terminate')
