@@ -2,3 +2,4 @@
 Start fra sensor - Må testes.
 Vis timer i video - Må testes.
 View video - Plages.
+git på pi
