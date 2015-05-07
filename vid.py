@@ -132,7 +132,10 @@ def annotate():
     return camera.annotate_text
 
 @app.route('/view')
-def view():
+def view2() :
+
+
+def view1():
     filename = request.query.filename
     print("View video file: " + filename)
     res = '''
