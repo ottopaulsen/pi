@@ -10,7 +10,7 @@ STATUS_STOPPING = 3
 STATUS_STOPPED = 4
 status = STATUS_STARTING
 
-VIDEOFORMAT = "h264"
+VIDEOFORMAT = "mjpeg"
 FRAMERATE = 25
 camera = picamera.PiCamera(framerate = FRAMERATE)
 camera.resolution = (640, 480)
@@ -23,7 +23,7 @@ app = Bottle()
 
 
 # Return filename for the next video to be recorded
-def getFilename(fileEnding = 'mp4'):
+def getFilename(fileEnding = VIDEOFORMAT):
     global videoCounter
     fileName =  "video-" + str(videoCounter) + "." + fileEnding
     while os.path.exists(fileName) :
@@ -58,7 +58,29 @@ def getCurrentFrameIndex(stream) :
     #print("Frame: " + str(res))
     return res
 
-def saveVideo(stream, start, stop) :
+
+def saveVideoMjpeg(stream, start, stop) :
+    global videoCounter
+    videoCounter += 1
+    print("Saving from " + str(start) + " to " + str(stop))
+    bytesToSave = 0
+    startPosition = None
+    with stream.lock :
+        for frame in stream.frames :
+            if frame.index >= start :
+                if startPosition is None :
+                    startPosition = frame.position
+                bytesToSave += frame.frame_size
+            if frame.index >= stop :
+                break
+        if bytesToSave > 0 :
+            print("Saving file " + getFilename() + ", frame " + str(start) + " to " + str(stop) + ", in total " + str(bytesToSave) + " bytes from position " + str(startPosition))
+            stream.seek(startPosition)
+            with io.open(getFilename(), 'wb') as output :
+                output.write(stream.read(bytesToSave))
+        else :
+            print("Uh? Nothing to save.")
+def saveVideoH264(stream, start, stop) :
     global videoCounter
     videoCounter += 1
     print("Saving from " + str(start) + " to " + str(stop))
@@ -116,7 +138,7 @@ def stop():
             print("Camera running " + str(offset) + " more seconds")               
             camera.wait_recording(offset)
         res = "Video stop frame: " + str(videoStopFrame)
-        saveVideo(stream, videoStartFrame, videoStopFrame)
+        saveVideoMjpeg(stream, videoStartFrame, videoStopFrame)
         camera.annotate_text = "Waiting"
         status = STATUS_WAITING
     print(res)
@@ -132,10 +154,7 @@ def annotate():
     return camera.annotate_text
 
 @app.route('/view')
-def view2() :
-
-
-def view1():
+def view():
     filename = request.query.filename
     print("View video file: " + filename)
     res = '''
