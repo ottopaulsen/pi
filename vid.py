@@ -14,8 +14,8 @@ VIDEOFORMAT = "h264"
 FRAMERATE = 25
 camera = picamera.PiCamera(framerate = FRAMERATE)
 camera.resolution = (640, 480)
-camera.hflip = True
-camera.vflip = True
+#camera.hflip = True
+#camera.vflip = True
 stream = picamera.PiCameraCircularIO(camera, seconds=120)
 videoCounter = 0
 
@@ -23,7 +23,7 @@ app = Bottle()
 
 
 # Return filename for the next video to be recorded
-def getFilename(fileEnding = 'mp4'):
+def getFilename(fileEnding = 'h264'):
     global videoCounter
     fileName =  "video-" + str(videoCounter) + "." + fileEnding
     while os.path.exists(fileName) :

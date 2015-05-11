@@ -2,4 +2,16 @@
 Start fra sensor - Må testes.
 Vis timer i video - Må testes.
 View video - Plages.
-git på pi
+git på pi - Installer på Sigmund sin
+Bruk callback i stedet for while true
+
+
+
+Etter 11. mai:
+Lag test-board. Sjekk at alt fungerer fort nok.
+Få timeren til å vises.
+Få python3 til å virke.
+
+
+
+
