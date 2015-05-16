@@ -1,6 +1,4 @@
 
-Start fra sensor - Må testes.
-Vis timer i video - Må testes.
 View video - Plages.
 git på pi - Installer på Sigmund sin
 Bruk callback i stedet for while true
@@ -11,7 +9,10 @@ Etter 11. mai:
 Lag test-board. Sjekk at alt fungerer fort nok.
 Få timeren til å vises.
 Få python3 til å virke.
+Lag robust trigger-detektor som fungerer enten video-service kjører eller ikke. Skriv ut alle signalskift som detekteres.
+Konfigurerbare pinner.
 
+Skriv bruksanvisning i readme.txt
 
 
 
