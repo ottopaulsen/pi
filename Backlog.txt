@@ -1,18 +1,15 @@
 
-View video - Plages.
-git på pi - Installer på Sigmund sin
-Bruk callback i stedet for while true
+Sjekk at test-board fungerer.
+Inject URL og porter.
 
-
-
-Etter 11. mai:
-Lag test-board. Sjekk at alt fungerer fort nok.
-Få timeren til å vises.
 Få python3 til å virke.
 Lag robust trigger-detektor som fungerer enten video-service kjører eller ikke. Skriv ut alle signalskift som detekteres.
 Konfigurerbare pinner.
-
+Lag en server.py som starter alt.
+Få timeren til å vises.
+Start ved boot.
 Skriv bruksanvisning i readme.txt
+View video - Plages.
 
 
 

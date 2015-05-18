@@ -50,13 +50,10 @@ def reset(stream) :
 
 def getCurrentFrameIndex(stream) :
     global camera
-    res = 0
-    with stream.lock :
-        for frame in stream.frames :
-            pass
-        res = frame.index 
-    #print("Frame: " + str(res))
-    return res
+    frame = None
+    while frame is None :
+        frame = camera.frame
+    return frame.index
 
 def saveVideo(stream, start, stop) :
     global videoCounter
@@ -125,6 +122,7 @@ def stop():
 @app.route('/annotate')
 def annotate():
     global camera
+    print ("Annotate: annotate = ", request.query.annotate, " time = ", request.query.time)
     if request.query.time is not None :
         camera.annotate_text = "Time: " + request.query.time
     else :
