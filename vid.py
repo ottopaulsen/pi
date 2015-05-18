@@ -1,7 +1,7 @@
 from bottle import Bottle, run, static_file, template, request, sys
-from oputils import stringToInt
 import time, picamera, io
 import os.path
+from oputils import stringToInt
 
 STATUS_STARTING = 0
 STATUS_WAITING = 1

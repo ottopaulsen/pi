@@ -5,6 +5,7 @@ import sys
 import select
 import io
 import urllib.request
+from threading import Timer
 
 URL = 'http://10.0.0.14:8080/'
 #URL = 'http://192.168.10.102:8080/'
@@ -55,6 +56,7 @@ def startSignalReceived(channel) :
     res = urllib.request.urlopen(req).read()
     timing = True
     print(", processing time " + str(round(time.time() - startTime, 2)) + " seconds. Result: ", res )
+    annotate()
 
 def stopSignalReceived(channel) :
     # Take time and send stop
@@ -75,27 +77,23 @@ GPIO.add_event_detect(stopButton, GPIO.FALLING, callback=stopSignalReceived, bou
 
 
 def annotate() :
+    global timing, startTime
+    if timing :
         # Send time info to camera
         now = time.time()
         printTime = str(round(now - startTime, 2))
         headers = {}
+        #print("Kaller annotate?time=", printTime)
         req = urllib.request.Request(URL + 'annotate?time=' + printTime, None, headers)
+        res = urllib.request.urlopen(req).read()
+        t = Timer(0.1, annotate)
+        t.start()        
 
 print("Starting loop.")
 
-timeit = true
 
 while True:
-
-    if timing and timeit:
-        t = Timer(0.1, annotate())
-        t.start()
-
-
-Skriv om slik at timer-funksjon kalles hvert x sek.
-Denne kaller annotate.
-Alternativt gjøres dette i videoprosessen. Kanske bedre. ?
-NB! Sjekk branch.
+    pass
 
 
 
