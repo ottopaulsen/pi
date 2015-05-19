@@ -1,7 +1,8 @@
 from bottle import Bottle, run, static_file, template, request, sys
-import time, picamera, io
+import time, picamera, io, datetime
 import os.path
 from oputils import stringToInt
+from threading import Timer
 
 STATUS_STARTING = 0
 STATUS_WAITING = 1
@@ -80,6 +81,20 @@ def saveVideo(stream, start, stop) :
             with io.open(getFilename(), 'wb') as output :
                 output.write(stream.read(bytesToSave))
 
+def setCamText() : 
+    global camera, startTime, stopTime, status
+    kl = datetime.datetime.now().strftime('%H:%M:%S')
+    now = time.time()
+    if status == STATUS_WAITING :
+        camText = kl
+    elif status == STATUS_STARTED :
+        camText = "%s  %d" % (kl, now - startTime)
+    elif status == STATUS_STOPPING :
+        camText = "%s  %d" % (kl, stopTime - startTime)
+    camera.annotate_text = camText
+    t = Timer(0.1, setCamText)
+    t.start()        
+
 
 @app.route('/start')
 def start():
@@ -89,9 +104,9 @@ def start():
         status = STATUS_STARTED
         offset = stringToInt(request.query.offset, 0)
         startTime = stringToInt(request.query.time, 0)
+        if startTime == 0 : startTime = time.time()
         videoStartFrame = getCurrentFrameIndex(stream) + offset * FRAMERATE
-        res = "Video start frame: " + str(videoStartFrame)
-        camera.annotate_text = "Time: " + str(startTime)
+        res = "Video start frame: %d, time: %f" % (videoStartFrame, startTime)
     print(res)
     return res
 
@@ -103,18 +118,17 @@ def stop():
         status = STATUS_STOPPING
         offset = stringToInt(request.query.offset, 0)
         stopTime = stringToInt(request.query.time, 0)
+        if stopTime == 0 : stopTime = time.time()
         videoStopFrame = getCurrentFrameIndex(stream) + offset * FRAMERATE
         videoLength = videoStopFrame - videoStartFrame
         if stopTime > 0 :
             runTime = stopTime - startTime
-            camera.annotate_text = "Time: " + str(runTime)
             print("Run time: " + str(runTime))
         if offset > 0 :
             print("Camera running " + str(offset) + " more seconds")               
             camera.wait_recording(offset)
-        res = "Video stop frame: " + str(videoStopFrame)
+        res = "Video stop frame: %d, time %f" % (videoStopFrame, stopTime)
         saveVideo(stream, videoStartFrame, videoStopFrame)
-        camera.annotate_text = "Waiting"
         status = STATUS_WAITING
     print(res)
     return res
@@ -178,4 +192,5 @@ def preview(function):
         return "Preview stopped"
 
 reset(stream)
+setCamText()
 run(app, host='0.0.0.0', port=8080, debug=True)

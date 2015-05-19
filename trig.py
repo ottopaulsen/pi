@@ -52,11 +52,11 @@ def startSignalReceived(channel) :
     print("Start pressed", end = '')
     sys.stdout.flush()
     headers = {}
-    req = urllib.request.Request(URL + 'start?time=', None, headers)
+    req = urllib.request.Request(URL + 'start?time=' + str(startTime), None, headers)
     res = urllib.request.urlopen(req).read()
     timing = True
     print(", processing time " + str(round(time.time() - startTime, 2)) + " seconds. Result: ", res )
-    annotate()
+    #annotate()
 
 def stopSignalReceived(channel) :
     # Take time and send stop
@@ -65,7 +65,7 @@ def stopSignalReceived(channel) :
     print("Stop pressed", end = '')
     sys.stdout.flush()
     headers = {}
-    req = urllib.request.Request(URL + 'stop?time=' + str(time.time() - startTime), None, headers)
+    req = urllib.request.Request(URL + 'stop?time=' + str(stopTime), None, headers)
     res = urllib.request.urlopen(req).read()
     timing = False
     print(",  processing time " + str(round(time.time() - stopTime, 2)) + " seconds. Result: ", res )

@@ -1,5 +1,12 @@
 
-Sjekk at test-board fungerer.
+Test timer i vid.py. Format ok?
+Bruk klokke i vid.py dersom den ikke sendes som parameter. Fjern parameter i Postman.
+
+Vis klokka så lenge det ikke er startet noe.
+Mellom start og stopp, vis klokke + teller.
+Etter stop, vis klokke og totaltid så lenge offset løper.
+
+
 Inject URL og porter.
 
 Få python3 til å virke.
