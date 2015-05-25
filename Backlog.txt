@@ -1,6 +1,5 @@
 
-Test timer i vid.py. Format ok?
-Bruk klokke i vid.py dersom den ikke sendes som parameter. Fjern parameter i Postman.
+Automatisk vis film umiddelbart
 
 Vis klokka så lenge det ikke er startet noe.
 Mellom start og stopp, vis klokke + teller.

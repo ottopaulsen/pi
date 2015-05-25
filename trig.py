@@ -52,10 +52,10 @@ def startSignalReceived(channel) :
     print("Start pressed", end = '')
     sys.stdout.flush()
     headers = {}
-    req = urllib.request.Request(URL + 'start?time=' + str(startTime), None, headers)
+    req = urllib.request.Request("%sstart?offset=-3" % (URL), None, headers)
     res = urllib.request.urlopen(req).read()
     timing = True
-    print(", processing time " + str(round(time.time() - startTime, 2)) + " seconds. Result: ", res )
+    print(", processing time %d seconds. Result: %s" % (time.time() - startTime, res))
     #annotate()
 
 def stopSignalReceived(channel) :
@@ -65,10 +65,10 @@ def stopSignalReceived(channel) :
     print("Stop pressed", end = '')
     sys.stdout.flush()
     headers = {}
-    req = urllib.request.Request(URL + 'stop?time=' + str(stopTime), None, headers)
+    req = urllib.request.Request("%sstop?offset=5" % (URL), None, headers)
     res = urllib.request.urlopen(req).read()
     timing = False
-    print(",  processing time " + str(round(time.time() - stopTime, 2)) + " seconds. Result: ", res )
+    print(",  processing time %d seconds. Result: %s" % (time.time() - stopTime, res ))
 
 GPIO.add_event_detect(startButton, GPIO.FALLING, callback=startSignalReceived, bouncetime=300)
 GPIO.add_event_detect(stopButton, GPIO.FALLING, callback=stopSignalReceived, bouncetime=300)

@@ -1,6 +1,6 @@
 from bottle import Bottle, run, static_file, template, request, sys
 import time, picamera, io, datetime
-import os.path
+import os.path, subprocess
 from oputils import stringToInt
 from threading import Timer
 
@@ -15,8 +15,8 @@ VIDEOFORMAT = "h264"
 FRAMERATE = 25
 camera = picamera.PiCamera(framerate = FRAMERATE)
 camera.resolution = (640, 480)
-#camera.hflip = True
-#camera.vflip = True
+camera.hflip = True
+camera.vflip = True
 stream = picamera.PiCameraCircularIO(camera, seconds=120)
 videoCounter = 0
 
@@ -63,6 +63,7 @@ def saveVideo(stream, start, stop) :
     lastSpsHeader = None
     startPosition = None
     bytesToSave = 0
+    filename = getFilename()
     with stream.lock :
         for frame in stream.frames :
             if frame.frame_type == picamera.PiVideoFrameType.sps_header :
@@ -76,10 +77,11 @@ def saveVideo(stream, start, stop) :
             if frame.index >= stop :
                 break
         if startPosition is not None :
-            print("Saving file " + getFilename() + ", frame " + str(start) + " to " + str(stop) + ", in total " + str(bytesToSave) + " bytes from position " + str(startPosition))
+            print("Saving file " + filename + ", frame " + str(start) + " to " + str(stop) + ", in total " + str(bytesToSave) + " bytes from position " + str(startPosition))
             stream.seek(startPosition)
-            with io.open(getFilename(), 'wb') as output :
+            with io.open(filename, 'wb') as output :
                 output.write(stream.read(bytesToSave))
+            return filename
 
 def setCamText() : 
     global camera, startTime, stopTime, status
@@ -88,9 +90,9 @@ def setCamText() :
     if status == STATUS_WAITING :
         camText = kl
     elif status == STATUS_STARTED :
-        camText = "%s  %d" % (kl, now - startTime)
+        camText = "%s%4.1f" % (kl, now - startTime)
     elif status == STATUS_STOPPING :
-        camText = "%s  %d" % (kl, stopTime - startTime)
+        camText = "%s%4.1f" % (kl, stopTime - startTime)
     camera.annotate_text = camText
     t = Timer(0.1, setCamText)
     t.start()        
@@ -112,7 +114,7 @@ def start():
 
 @app.route('/stop')
 def stop():
-    global camera, stream, output, status, videoStartFrame, startTime
+    global camera, stream, output, status, videoStartFrame, startTime, stopTime
     res = "Not started. Cannot stop."
     if status == STATUS_STARTED :
         status = STATUS_STOPPING
@@ -128,8 +130,10 @@ def stop():
             print("Camera running " + str(offset) + " more seconds")               
             camera.wait_recording(offset)
         res = "Video stop frame: %d, time %f" % (videoStopFrame, stopTime)
-        saveVideo(stream, videoStartFrame, videoStopFrame)
+        filename = saveVideo(stream, videoStartFrame, videoStopFrame) 
         status = STATUS_WAITING
+        if filename :
+            subprocess.Popen (["omxplayer", filename])
     print(res)
     return res
 
